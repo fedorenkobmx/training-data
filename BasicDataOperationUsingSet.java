@@ -1,20 +1,12 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.OptionalDouble;
-import java.util.Set;
-import java.util.stream.IntStream;
+import java.io.*;
+import java.util.*;
 
 public class BasicDataOperationUsingSet {
     static final String PATH_TO_DATA_FILE = "list/float.data";
 
-    float dataValueToSearch;
-    float[] dataArray;
-    Set<Float> dataSet = new HashSet<>();
+    Float floatValueToSearch;
+    Float[] floatArray;
+    Set<Float> floatSet = new HashSet<>();
 
     public static void main(String[] args) {
         BasicDataOperationUsingSet basicDataOperationUsingSet = new BasicDataOperationUsingSet(args);
@@ -23,22 +15,14 @@ public class BasicDataOperationUsingSet {
 
     BasicDataOperationUsingSet(String[] args) {
         if (args.length == 0) {
-            throw new RuntimeException("Вiдсутнє значення для пошуку");
+            throw new RuntimeException("Відсутнє значення для пошуку");
         }
 
         String valueToSearch = args[0];
-        this.dataValueToSearch = Float.parseFloat(valueToSearch);
+        this.floatValueToSearch = Float.parseFloat(valueToSearch);
 
-        dataArray = Utils.readArrayFromFile(PATH_TO_DATA_FILE);
-        dataSet = new HashSet<>(Arrays.asList(convertToFloatArray(dataArray)));
-    }
-
-    private Float[] convertToFloatArray(float[] floatArray) {
-        Float[] result = new Float[floatArray.length];
-        for (int i = 0; i < floatArray.length; i++) {
-            result[i] = floatArray[i];
-        }
-        return result;
+        floatArray = Utils.readArrayFromFile(PATH_TO_DATA_FILE);
+        floatSet = new HashSet<>(Arrays.asList(floatArray));
     }
 
     private void doDataOperation() {
@@ -52,169 +36,151 @@ public class BasicDataOperationUsingSet {
 
         searchSet();
         findMinAndMaxInSet();
+
+        sortHashSet();
+
         compareArrayAndSet();
 
-        Utils.writeArrayToFile(dataArray, PATH_TO_DATA_FILE + ".sorted");
+        Utils.writeArrayToFile(floatArray, PATH_TO_DATA_FILE + ".sorted");
     }
 
     private void sortArray() {
-        double[] doubleArray = new double[dataArray.length];
-        for (int i = 0; i < dataArray.length; i++) {
-            doubleArray[i] = dataArray[i];
-        }
         long startTime = System.nanoTime();
-        double[] sortedDoubleArray = Arrays.stream(doubleArray)
-                .sorted()
-                .toArray();
-        dataArray = new float[sortedDoubleArray.length];
-        for (int i = 0; i < sortedDoubleArray.length; i++) {
-            dataArray[i] = (float) sortedDoubleArray[i];
-        }
 
-        Utils.printOperationDuration(startTime, "сортування масиву значень типу float через потоки");
+        Arrays.sort(floatArray, Collections.reverseOrder());
+
+        Utils.printOperationDuration(startTime, "сортування масиву типу float в зворотній бік.");
+    }
+
+    private void sortHashSet() {
+        long startTime = System.nanoTime();
+
+        List<Float> floatList = new ArrayList<>(floatSet);
+
+        Collections.sort(floatList, Collections.reverseOrder());
+
+        Utils.printOperationDuration(startTime, "сортування колекції типу HashSet в зворотній бік.");
     }
 
     private void searchArray() {
-        double[] doubleArray = new double[dataArray.length];
-        for (int i = 0; i < dataArray.length; i++) {
-            doubleArray[i] = dataArray[i];
-        }
-        double searchValue = dataValueToSearch;
-
         long startTime = System.nanoTime();
 
-        int index = IntStream.range(0, doubleArray.length)
-                .filter(i -> doubleArray[i] == searchValue)
-                .findFirst()
-                .orElse(-1);
-        Utils.printOperationDuration(startTime, "пошук в масивi значень типу float через потоки");
+        int index = Arrays.binarySearch(floatArray, floatValueToSearch);
+
+        Utils.printOperationDuration(startTime, "пошук у масиві типу float");
+
         if (index >= 0) {
-            System.out.println("Значення '" + dataValueToSearch + "' знайдено в масивi за індексом: " + index);
+            System.out.println("Значення '" + floatValueToSearch + "' знайдено в масиві за індексом: " + index);
         } else {
-            System.out.println("Значення '" + dataValueToSearch + "' в масивi не знайдено.");
+            System.out.println("Значення '" + floatValueToSearch + "' у масиві не знайдено.");
         }
     }
 
     private void findMinAndMaxInArray() {
-        if (dataArray == null || dataArray.length == 0) {
-            System.out.println("Масив порожнiй або не iнiцiалiзований.");
+        if (floatArray == null || floatArray.length == 0) {
+            System.out.println("Масив порожній або не ініціалізований.");
             return;
-        }
-
-        double[] doubleArray = new double[dataArray.length];
-        for (int i = 0; i < dataArray.length; i++) {
-            doubleArray[i] = dataArray[i];
         }
 
         long startTime = System.nanoTime();
 
-        OptionalDouble min = Arrays.stream(doubleArray).min();
-        OptionalDouble max = Arrays.stream(doubleArray).max();
+        Float min = floatArray[0];
+        Float max = floatArray[0];
 
-        Utils.printOperationDuration(startTime, "пошук мiнiмальної i максимальної величини в масивi");
-
-        if (min.isPresent()) {
-            System.out.println("Мiнiмальне значення в масивi: " + (float) min.getAsDouble());
-        } else {
-            System.out.println("Мінімальне значення не знайдено.");
+        for (Float floatValue : floatArray) {
+            if (floatValue < min) {
+                min = floatValue;
+            }
+            if (floatValue > max) {
+                max = floatValue;
+            }
         }
 
-        if (max.isPresent()) {
-            System.out.println("Максимальне значення в масивi: " + (float) max.getAsDouble());
-        } else {
-            System.out.println("Максимальне значення не знайдено.");
-        }
+        Utils.printOperationDuration(startTime, "пошук мінімального і максимального значення у масиві типу float");
+
+        System.out.println("Мінімальне значення у масиві: " + min);
+        System.out.println("Максимальне значення у масиві: " + max);
     }
 
     private void searchSet() {
         long startTime = System.nanoTime();
-        boolean isFound = this.dataSet.contains(dataValueToSearch);
-        Utils.printOperationDuration(startTime, "пошук в HashSet значень типу float");
+
+        boolean isFound = floatSet.contains(floatValueToSearch);
+
+        Utils.printOperationDuration(startTime, "пошук у HashSet типу float");
 
         if (isFound) {
-            System.out.println("Значення '" + dataValueToSearch + "' знайдено в HashSet");
+            System.out.println("Значення '" + floatValueToSearch + "' знайдено у HashSet");
         } else {
-            System.out.println("Значення '" + dataValueToSearch + "' в HashSet не знайдено.");
+            System.out.println("Значення '" + floatValueToSearch + "' у HashSet не знайдено.");
         }
     }
 
     private void findMinAndMaxInSet() {
-        if (dataSet == null || dataSet.isEmpty()) {
-            System.out.println("HashSet порожнiй або не iнiцiалiзований.");
+        if (floatSet == null || floatSet.isEmpty()) {
+            System.out.println("HashSet порожній або не ініціалізований.");
             return;
-        }
-        double[] doubleArray = new double[dataSet.size()];
-        int i = 0;
-        for (Float value : dataSet) {
-            doubleArray[i++] = value;
         }
 
         long startTime = System.nanoTime();
 
-        OptionalDouble min = Arrays.stream(doubleArray).min();
-        OptionalDouble max = Arrays.stream(doubleArray).max();
-        Utils.printOperationDuration(startTime, "пошук мiнiмальної i максимальної величини в HashSet");
-        if (min.isPresent()) {
-            System.out.println("Мiнiмальне значення в HashSet: " + (float) min.getAsDouble());
-        } else {
-            System.out.println("Мінімальне значення не знайдено.");
-        }
-        if (max.isPresent()) {
-            System.out.println("Максимальне значення в HashSet: " + (float) max.getAsDouble());
-        } else {
-            System.out.println("Максимальне значення не знайдено.");
-        }
+        Float min = Collections.min(floatSet);
+        Float max = Collections.max(floatSet);
+
+        Utils.printOperationDuration(startTime, "пошук мінімального і максимального значення у HashSet типу float");
+
+        System.out.println("Мінімальне значення у HashSet: " + min);
+        System.out.println("Максимальне значення у HashSet: " + max);
     }
 
     private void compareArrayAndSet() {
-        System.out.println("Кiлькiсть елементiв в масивi: " + dataArray.length);
-        System.out.println("Кiлькiсть елементiв в HashSet: " + dataSet.size());
+        System.out.println("Кількість елементів у масиві: " + floatArray.length);
+        System.out.println("Кількість елементів у HashSet: " + floatSet.size());
 
-        double[] doubleArray = new double[dataArray.length];
-        for (int i = 0; i < dataArray.length; i++) {
-            doubleArray[i] = dataArray[i];
+        boolean allElementsMatch = true;
+        for (Float floatValue : floatArray) {
+            if (!floatSet.contains(floatValue)) {
+                allElementsMatch = false;
+                break;
+            }
         }
-
-        boolean allElementsMatch = Arrays.stream(doubleArray)
-                .allMatch(value -> dataSet.contains((float) value));
 
         if (allElementsMatch) {
-            System.out.println("Всi елементи масиву присутнi в HashSet.");
+            System.out.println("Всі елементи масиву присутні в HashSet.");
         } else {
-            System.out.println("Не всi елементи масиву присутнi в HashSet.");
+            System.out.println("Не всі елементи масиву присутні в HashSet.");
         }
     }
+
 }
 
 class Utils {
     static void printOperationDuration(long startTime, String operationName) {
         long endTime = System.nanoTime();
-        long duration = (endTime - startTime);
-        System.out.println("\n>>>>>>>>>> Час виконання операцiї '" + operationName + "': " + duration + " наносекунд");
+        System.out.println("\n>>>>>>>>>> Час виконання операції '" + operationName + "': " + (endTime - startTime)
+                + " наносекунд");
     }
 
-    static float[] readArrayFromFile(String pathToFile) {
-        try (BufferedReader br = new BufferedReader(new FileReader(pathToFile))) {
-            double[] doubleArray = br.lines()
-                    .map(line -> Float.parseFloat(line))
-                    .mapToDouble(Float::doubleValue)
-                    .toArray();
+    static Float[] readArrayFromFile(String pathToFile) {
+        Float[] tempArray = new Float[1000];
+        int index = 0;
 
-            float[] floatArray = new float[doubleArray.length];
-            for (int i = 0; i < doubleArray.length; i++) {
-                floatArray[i] = (float) doubleArray[i];
+        try (BufferedReader br = new BufferedReader(new FileReader(pathToFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                tempArray[index++] = Float.parseFloat(line);
             }
-            return floatArray;
         } catch (IOException e) {
             e.printStackTrace();
-            return new float[0];
         }
+
+        return Arrays.copyOf(tempArray, index);
     }
 
-    static void writeArrayToFile(float[] dataArray, String pathToFile) {
+    static void writeArrayToFile(Float[] floatArray, String pathToFile) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathToFile))) {
-            for (float value : dataArray) {
-                writer.write(Float.toString(value));
+            for (Float value : floatArray) {
+                writer.write(value.toString());
                 writer.newLine();
             }
         } catch (IOException e) {
